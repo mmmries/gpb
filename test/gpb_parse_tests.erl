@@ -692,7 +692,6 @@ parse_lines(Lines) ->
     S = binary_to_list(iolist_to_binary([[L,"\n"] || L <- Lines])),
     case gpb_scan:string(S) of
         {ok, Tokens, _} ->
-            io:format('~w~n', [Tokens]),
             case gpb_parse:parse(Tokens++[{'$end',length(Lines)+1}]) of
                 {ok, Result} ->
                     {ok, Result};
