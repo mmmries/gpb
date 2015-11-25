@@ -404,6 +404,19 @@ parses_nested_extending_msgs_in_package_test() ->
                    occurrence=optional}]}] =
         do_process_sort_defs(Defs, [use_packages]).
 
+parses_extending_message_in_other_package_test() ->
+    {ok,Defs1} = parse_lines(["package p1;",
+                             "message m1 {",
+                             "  required uint32 f1=1;",
+                             "}"]),
+    {ok,Defs2} = parse_lines(["package p2;",
+                             "extend p1.m1 {",
+                             "  required uint32 f2=2;",
+                             "}"]),
+    [{{msg,'p1.m1'}, [#?gpb_field{name=f1},
+                      #?gpb_field{name=f2}]}] =
+        do_process_sort_defs(Defs1 ++ Defs2).
+
 parses_service_test() ->
     {ok,Defs} = parse_lines(["message m1 {required uint32 f1=1;}",
                              "message m2 {required uint32 f2=1;}",
@@ -679,6 +692,7 @@ parse_lines(Lines) ->
     S = binary_to_list(iolist_to_binary([[L,"\n"] || L <- Lines])),
     case gpb_scan:string(S) of
         {ok, Tokens, _} ->
+            io:format('~w~n', [Tokens]),
             case gpb_parse:parse(Tokens++[{'$end',length(Lines)+1}]) of
                 {ok, Result} ->
                     {ok, Result};
