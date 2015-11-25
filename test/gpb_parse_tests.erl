@@ -415,7 +415,7 @@ parses_extending_message_in_other_package_test() ->
                              "}"]),
     [{{msg,'p1.m1'}, [#?gpb_field{name=f1},
                       #?gpb_field{name=f2}]}] =
-        do_process_sort_defs(Defs1 ++ Defs2).
+        do_process_sort_multiple_defs([Defs1, Defs2], [{use_packages, true}]).
 
 parses_service_test() ->
     {ok,Defs} = parse_lines(["message m1 {required uint32 f1=1;}",
@@ -716,3 +716,10 @@ post_process(Elems, Opts) ->
     {ok, Elems2} = gpb_parse:post_process_one_file(Elems, Opts),
     gpb_parse:post_process_all_files(Elems2, Opts).
 
+do_process_sort_multiple_defs(ListOfDefs, Opts) ->
+    FlattenedProcessedDefs = lists:foldl(fun(Defs, Flattened) ->
+            {ok, Processed} = gpb_parse:post_process_one_file(Defs, Opts),
+            Flattened ++ Processed
+        end, [], ListOfDefs),
+    {ok, Finalized} = gpb_parse:post_process_all_files(FlattenedProcessedDefs),
+    lists:sort(Finalized).
